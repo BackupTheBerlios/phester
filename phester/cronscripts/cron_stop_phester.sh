@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: cron_stop_phester.sh,v 1.1 2002/02/20 16:04:56 riessen Exp $
+# $Id: cron_stop_phester.sh,v 1.2 2002/05/02 09:04:19 riessen Exp $
 #
 
 PID_FILE=/tmp/phester.pid
@@ -14,6 +14,7 @@ PHESTER_HOME=/home/users/riessen/bin/phester
 GAWK_ENGINE=/home/users/riessen/bin/gawk
 
 echo "This is file "$0
+echo "PID is: "$$
 
 # first ensure that the pid file exists ...
 if [[ ! -f $PID_FILE ]]; 
@@ -62,6 +63,7 @@ fi
 if [[ -f /tmp/phester.$P_PID.sh ]]; 
 then
   # this defines the output_dir variable
+  echo "Sourcing /tmp/phester.$P_PID.sh ..."
   . /tmp/phester.$P_PID.sh
   rm -fr /tmp/phester.$P_PID.sh
 else
