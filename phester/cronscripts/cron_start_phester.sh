@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: cron_start_phester.sh,v 1.1 2002/02/20 16:02:55 riessen Exp $
+# $Id: cron_start_phester.sh,v 1.2 2002/02/20 16:49:41 riessen Exp $
 #
 
 HOME_DIR=/home/users/riessen
@@ -58,5 +58,8 @@ touch $STD_ERR
 
 ./phester.sh $CONFIG_FILE
 
+echo "------------- Protocol --------------"
 cat $STD_ERR
+echo "-------------------------------------"
+
 rm -fr $STD_ERR
