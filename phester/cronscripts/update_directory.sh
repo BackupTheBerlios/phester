@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.4 2002/04/23 12:53:44 riessen Exp $
+# $Id: update_directory.sh,v 1.5 2002/05/02 09:03:12 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -48,16 +48,26 @@ echo "Adding new directories ..."
 for tfile in `diff -u $tar_list $dir_list | grep ^-[^-] | sed s/^-//g`;
 do
     echo -n "  "${tfile}.tgz
-    tar xfz ${SRC_DIR}/${tfile}.tgz
-    if [ -d $tfile ];
+    if [ -f ${SRC_DIR}/${tfile}.tgz ];
     then
-      cd $tfile
-      echo -n " removing zero-sized files ..."
-      file_list=`ls --sort=size -s -1 | grep "^[ ]*0[ ]" | sed s"/[ ]*0[ ]//"g`
-      rm -fr $file_list
-      cd ..
+      tar xfz ${SRC_DIR}/${tfile}.tgz
+      if [ -d $tfile ];
+      then
+        cd $tfile
+        echo -n " removing zero-sized files ... "
+        file_list=`ls -S -s -1 | grep "^[ ]*0[ ]" | sed s"/[ ]*0[ ]//"g`
+        rm -fr $file_list
+        cd ..
+      else
+        echo -n " directory '"${tfile}"' was not created ..."
+      fi
     else
-      echo -n " directory '"${tfile}"' was not created ..."
+      echo -n " does not exist ... "
+      if [ -d ${SRC_DIR}/${tfile} ];
+      then
+        echo -n " removing directory ${SRC_DIR}/${tfile} ... "
+        rm -fr ${SRC_DIR}/${tfile}
+      fi
     fi
     echo "done"
 done
