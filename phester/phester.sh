@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: phester.sh,v 1.1 2002/02/20 16:04:56 riessen Exp $
+# $Id: phester.sh,v 1.2 2002/02/20 16:49:25 riessen Exp $
 #
 
 #
@@ -203,10 +203,6 @@ function execute_unit_tests() {
     cd $currwd
 }
 
-function run_all_unit_tests() {
-    execute_unit_tests /tmp/$$
-}
-
 function sleep_and_diff() {
     # assume that /tmp/$$ contains the output of the last run of the unit
     # tests and that $output_dir/${BASE_RAUT}.0.0 contains a copy
@@ -231,7 +227,7 @@ function do_run() {
         echo -n "," $change_num >> $STD_ERR
         make_change >> $protocol
         copy_changes_to_output_dir 
-        run_all_unit_tests
+        execute_unit_tests /tmp/$$
         sleep_and_diff
         change_num=$(($change_num + 1))
     done
@@ -249,6 +245,8 @@ files_changed_count=0
 # intialise the output directory
 if [[ -f $output_dir ]];
 then
+    # to be sure ... to be sure
+    rm -fr $output_dir
     rm -fr $output_dir
 fi
 if [[ ! -d $output_dir ]];
@@ -273,7 +271,25 @@ run_counter=0
 change_num=0
 
 # create a "perfect" run with which we do a diff to find differences
+# need to wait and check that it was completed, if not then exit with
+# error message
+echo "Creating \"perfect\" unit test run: "$output_dir/${BASE_RAUT}.0.0
+echo "Creating unit test run: "$output_dir/${BASE_RAUT}.0.0 >> $protocol
 execute_unit_tests $output_dir/${BASE_RAUT}.0.0
+sleep $wait_time
+
+if ps -p $! | grep $php_engine >/dev/null 2>&1;
+then
+    echo "It appears that the unit tests contain an endless loop ... exiting"
+    echo "Failed to create clean unit test run" >> $protocol
+    echo "Finishing on: " `date` >> $protocol
+    rm --force --recursive $output_dir $PID_FILE $OUT_DIR_FILE
+    # sometimes SuSE is just plan f**ked in the head: rm complains although
+    # the directory is emptied by the command, so we need to call again
+    # to remove a *now* empty directory
+    rm --force --recursive $output_dir $PID_FILE $OUT_DIR_FILE
+    exit 1
+fi
 
 run_counter=1
 while (( $quit ));
