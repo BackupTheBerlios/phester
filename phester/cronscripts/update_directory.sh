@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.8 2002/05/30 07:45:51 riessen Exp $
+# $Id: update_directory.sh,v 1.9 2002/05/30 08:08:59 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -94,7 +94,7 @@ echo "</ul></body></html>" >> index.html
 
 # remove the excessive tar files in the source directory
 cd $SRC_DIR
-if (( $TAR_FILES_KEEP > 0 )); 
+if (( $TAR_FILES_KEEP >= 0 )); 
 then
   remove_file_count=$(( `ls | wc -l` - $TAR_FILES_KEEP ))
   if (( $remove_file_count > 0 ));
