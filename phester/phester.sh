@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: phester.sh,v 1.2 2002/02/20 16:49:25 riessen Exp $
+# $Id: phester.sh,v 1.3 2002/02/21 12:47:04 riessen Exp $
 #
 
 #
@@ -17,10 +17,10 @@
 # TODO:    the later change replaces the earlier one .....
 
 # configuration file
+# if there is an argument, assume it is the name of the configuration
+# file to use
 if (( $# > 0 ));
 then
-  # if there is an argument, assume it is the name of the configuration
-  # file to use
   CONFIG_FILE=$1
 else
   CONFIG_FILE=phester.cfg
@@ -70,10 +70,12 @@ gawk=gawk
 STD_ERR=/dev/stderr
 
 # source the configuration file if one exists
+# all variables above this point are externally configurable, 
+# all below aren't!
 if [[ -f $CONFIG_FILE ]];
 then
-    echo "Initialising from '"${CONFIG_FILE}"' ..." >> $STD_ERR
     . $CONFIG_FILE
+    echo "Initialised from '"${CONFIG_FILE}"' ..." >> $STD_ERR
 else
     echo "Configuration file '"${CONFIG_FILE}"' not found" >> $STD_ERR
 fi
@@ -83,6 +85,8 @@ fi
 BASE_RAUT=run_all_unit_tests
 # this is the extension files become when they are backed-up
 ORIG=phester
+# name of the file containing details of the last RAUT run
+LAST_RAUT=_raut_last_run_
 
 # we store the pid in this file
 PID_FILE=/tmp/phester.pid
@@ -208,17 +212,35 @@ function sleep_and_diff() {
     # tests and that $output_dir/${BASE_RAUT}.0.0 contains a copy
     # of the "perfect" run.
     sleep $wait_time
+    if ps -p $! > /dev/null 2>&1;
+    then
+        echo "Process "$!" still running: Change: "${change_num} >> $protocol
+    fi
     kill $! >> $protocol 2>&1
 
     if [[ -f $output_dir/${BASE_RAUT}.${run_counter}.${change_num} ]];
     then
         echo -n "**WARNING: ${BASE_RAUT}."           >> $protocol
         echo -n "${run_counter}.${change_num}  "     >> $protocol
-        echo "existed, replacing it something new!"  >> $protocol
+        echo "existed, replacing it!"                >> $protocol
         rm -fr $output_dir/${BASE_RAUT}.${run_counter}.${change_num}
     fi
-    diff $output_dir/${BASE_RAUT}.0.0 /tmp/$$ > \
+
+    # compare the outputs of the runs. The last output is compared to the
+    # current output, if a difference is noticed, then a diff with the
+    # *perfect* run is made (this is the only run that is kept), else
+    # we touch the diff file to indicate no change happened.
+    if ! diff -q /tmp/$$ $output_dir/$LAST_RAUT >/dev/null; 
+    then
+        diff $output_dir/${BASE_RAUT}.0.0 /tmp/$$ > \
                          $output_dir/${BASE_RAUT}.${run_counter}.${change_num}
+    else
+        touch $output_dir/${BASE_RAUT}.${run_counter}.${change_num}
+    fi
+
+    # make a copy of the output of the last RAUT run
+    rm -f $output_dir/$LAST_RAUT
+    cp /tmp/$$ $output_dir/$LAST_RAUT
 }
 
 function do_run() {
@@ -278,7 +300,7 @@ echo "Creating unit test run: "$output_dir/${BASE_RAUT}.0.0 >> $protocol
 execute_unit_tests $output_dir/${BASE_RAUT}.0.0
 sleep $wait_time
 
-if ps -p $! | grep $php_engine >/dev/null 2>&1;
+if ps -p $! >/dev/null 2>&1;
 then
     echo "It appears that the unit tests contain an endless loop ... exiting"
     echo "Failed to create clean unit test run" >> $protocol
@@ -290,6 +312,10 @@ then
     rm --force --recursive $output_dir $PID_FILE $OUT_DIR_FILE
     exit 1
 fi
+
+# create the first last raut file ...
+rm -f $output_dir/$LAST_RAUT
+cp $output_dir/${BASE_RAUT}.0.0 $output_dir/$LAST_RAUT
 
 run_counter=1
 while (( $quit ));
@@ -304,7 +330,7 @@ done
 # remove the PID file so that other phesters may start
 # paranoid test: check that the pid contained in PID_FILE is the 
 # same as our pid. 
-rm -fr $PID_FILE
+rm -fr $PID_FILE $output_dir/$LAST_RAUT
 
 # all changes should have been resetted
 echo -e "\n\n" >> $STD_ERR
