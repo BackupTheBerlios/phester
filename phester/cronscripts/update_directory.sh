@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.3 2002/03/07 14:40:33 riessen Exp $
+# $Id: update_directory.sh,v 1.4 2002/04/23 12:53:44 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -49,15 +49,21 @@ for tfile in `diff -u $tar_list $dir_list | grep ^-[^-] | sed s/^-//g`;
 do
     echo -n "  "${tfile}.tgz
     tar xfz ${SRC_DIR}/${tfile}.tgz
-    cd $tfile
-    echo -n " removing zero-sized files ..."
-    file_list=`ls --sort=size -s -1 | grep "^[ ]*0[ ]" | sed s"/[ ]*0[ ]//"g`
-    rm -fr $file_list
-    cd ..
+    if [ -d $tfile ];
+    then
+      cd $tfile
+      echo -n " removing zero-sized files ..."
+      file_list=`ls --sort=size -s -1 | grep "^[ ]*0[ ]" | sed s"/[ ]*0[ ]//"g`
+      rm -fr $file_list
+      cd ..
+    else
+      echo -n " directory '"${tfile}"' was not created ..."
+    fi
     echo "done"
 done
 
 echo "Recreating index.html ..."
+cd $DEST_DIR
 file_list=`ls`
 echo "<html><head><title>Phester Index</title></head><body><ul>" > index.html
 for dir in $file_list;
