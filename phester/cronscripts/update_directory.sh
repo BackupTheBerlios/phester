@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.6 2002/05/29 10:35:57 riessen Exp $
+# $Id: update_directory.sh,v 1.7 2002/05/29 10:37:49 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -21,7 +21,7 @@ SRC_DIR=/home/users/riessen/bin/phester/_output_
 # interests of saving space, this should be under 10)
 STORE_LAST=3
 # how many tar files should be kept, this number must be greater
-# than STORE_LAST
+# than STORE_LAST. If this is set to -1 then all files are kept
 TAR_FILES_KEEP=5
 
 echo "This file is "$0
@@ -93,13 +93,16 @@ done
 echo "</ul></body></html>" >> index.html
 
 # remove the excessive tar files in the source directory
-remove_file_count=$(( `ls | wc -l` - $TAR_FILES_KEEP ))
-echo "Removing last $remove_file_count files ..."
-for n in `ls --sort=time | tail -$remove_file_count`; 
-do
-    echo "  removing $n ..."
-    rm -f $n
-done
+if (( $TAR_FILES_KEEP > 0 )); 
+then
+  remove_file_count=$(( `ls | wc -l` - $TAR_FILES_KEEP ))
+  echo "Removing last $remove_file_count files ..."
+  for n in `ls --sort=time | tail -$remove_file_count`; 
+  do
+      echo "  removing $n ..."
+      rm -f $n
+  done
+fi
 
 # clean up after ourselves
 rm -fr $dir_list $tar_list
