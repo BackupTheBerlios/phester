@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.1 2002/02/20 16:04:56 riessen Exp $
+# $Id: update_directory.sh,v 1.2 2002/02/25 15:17:15 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -27,15 +27,15 @@ echo "Source Directory="$SRC_DIR
 
 tar_list=/tmp/ud_dl_tars_$$.txt
 dir_list=/tmp/ud_dl_dirs_$$.txt
-rm -fr $dir_list $tar_list
+rm -fr $dir_list $tar_list $DEST_DIR/index.html
 
 # first find out which files are the most up-to-date
 cd $SRC_DIR
-ls --sort=time | sed s/[.]tgz$//g | head -${STORE_LAST} > $tar_list
+ls --sort=time | sed s/[.]tgz$//g | head -${STORE_LAST} | sort > $tar_list
 
 # now find out which files we can delete
 cd $DEST_DIR
-ls > $dir_list
+ls | sort > $dir_list
 
 echo "Removing old directories:"
 for dir in `diff -u $dir_list $tar_list | grep ^-[^-] | sed s/^-//g`; 
@@ -50,29 +50,29 @@ do
     echo -n "  "${tfile}.tgz
     tar xfz ${SRC_DIR}/${tfile}.tgz
     cd $tfile
-    echo " removing zero-sized files ..."
+    echo -n " removing zero-sized files ..."
     file_list=`ls --sort=size -s -1 | grep "^[ ]*0[ ]" | sed s"/[ ]*0[ ]//"g`
     rm -fr $file_list
     cd ..
+    echo "done"
 done
 
 echo "Recreating index.html ..."
-rm -fr index.html
 file_list=`ls`
 echo "<html><head><title>Phester Index</title></head><body><ul>" > index.html
 for dir in $file_list;
 do
     datum=`echo $dir | sed s"/_/ /"g | sed s"/\^/:/"g`
-    echo "<li>For "${datum}" <ul>" >> index.html
+    echo "<li>For "${datum}" <ul>"                        >> index.html
     echo "<li><a href=\"${dir}/results.files.html\">Results by Files</a>" \
                                                           >> index.html
     echo "<li><a href=\"${dir}/results.runs.html\">Results by Runs</a>" \
                                                           >> index.html
-    echo "</ul>" >> index.html
+    echo "</ul>"                                          >> index.html
 done
 
 echo "</ul></body></html>" >> index.html
 
 # clean up after ourselves
-rm -fr $dir_list $tar_list
+#rm -fr $dir_list $tar_list
 
