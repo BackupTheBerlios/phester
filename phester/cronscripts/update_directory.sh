@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: update_directory.sh,v 1.2 2002/02/25 15:17:15 riessen Exp $
+# $Id: update_directory.sh,v 1.3 2002/03/07 14:40:33 riessen Exp $
 #
 #
 # utility script for taking the latest phester output tar (generated
@@ -74,5 +74,5 @@ done
 echo "</ul></body></html>" >> index.html
 
 # clean up after ourselves
-#rm -fr $dir_list $tar_list
+rm -fr $dir_list $tar_list
 
