@@ -6,7 +6,7 @@
 # Copyright (C) 2002 Gerrit Riessen
 # This code is licensed under the GNU Public License.
 #
-# $Id: phester.sh,v 1.3 2002/02/21 12:47:04 riessen Exp $
+# $Id: phester.sh,v 1.4 2002/05/02 09:03:42 riessen Exp $
 #
 
 #
@@ -96,6 +96,7 @@ then
     echo "PID File found, exiting ..." >> $STD_ERR
     exit
 else
+    echo "PID is: "$$
     echo $$ > $PID_FILE
     echo "output_dir="$output_dir > $OUT_DIR_FILE
 fi
